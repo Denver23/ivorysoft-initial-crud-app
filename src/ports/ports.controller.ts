@@ -1,0 +1,144 @@
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Req, Res, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { PortsService } from './ports.service';
+import { ResponseBuilderService, SwaggerResponseBuilder } from '../responseBuilder/responseBuilder.service';
+import { Request, Response } from 'express';
+import { PortObject } from '../config/swagger-examples';
+import { CreatePortDto } from './dto/create-port.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ProjectError } from '../filters/all-exceptions.filter';
+import { Role } from '../roles-guard/role.enum';
+import { PortDocument } from './ports.model';
+import { UpdatePortDto } from './dto/update-port.dto';
+
+@ApiTags('Ports')
+@Controller('ports')
+export class PortsController {
+  constructor(
+    private readonly portsService: PortsService,
+    private readonly responseBuilderService: ResponseBuilderService,
+  ) {}
+
+  @ApiOperation({
+    summary: 'Should create new Port',
+    description: 'Returns new Port Object',
+  })
+  @ApiCreatedResponse({
+    description: 'Created',
+    content: {
+      'application/json': {
+        example: SwaggerResponseBuilder.sendSuccess(PortObject),
+      },
+    },
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post()
+  public async create(@Req() req: Request, @Res() res: Response, @Body() createPortDto: CreatePortDto) {
+    const port = await this.portsService.create(createPortDto);
+
+    return res.status(HttpStatus.CREATED).json(this.responseBuilderService.sendSuccess(port));
+  }
+
+  @ApiOperation({
+    summary: 'Should delete Port by id',
+    description: 'Delete Port',
+  })
+  @ApiCreatedResponse({
+    description: 'No Content',
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Delete(':portId')
+  public async delete(@Req() req: Request, @Res() res: Response, @Param('portId') portId: string): Promise<Response> {
+    const { user }: any = req;
+
+    if (user.role !== Role.Admin) throw new ProjectError(1002);
+
+    const port: PortDocument | null = await this.portsService.findById(portId);
+
+    if (!port) throw new ProjectError(1014);
+
+    await this.portsService.delete(portId);
+
+    return res.sendStatus(HttpStatus.NO_CONTENT);
+  }
+
+  @ApiOperation({
+    summary: 'Should fetch Port by id',
+    description: 'Get Port',
+  })
+  @ApiCreatedResponse({
+    description: 'Ok',
+    content: {
+      'application/json': {
+        example: SwaggerResponseBuilder.sendSuccess(PortObject),
+      },
+    },
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get(':portId')
+  public async getPort(@Req() req: Request, @Res() res: Response, @Param('portId') portId: string): Promise<Response> {
+    const { user }: any = req;
+
+    const port: PortDocument | null = await this.portsService.findById(portId);
+
+    if (!port) throw new ProjectError(1014);
+
+    return res.status(HttpStatus.OK).json(this.responseBuilderService.sendSuccess(port));
+  }
+
+  @ApiOperation({
+    summary: 'Should fetch all Ports',
+    description: 'Get Ports',
+  })
+  @ApiCreatedResponse({
+    description: 'Ok',
+    content: {
+      'application/json': {
+        example: SwaggerResponseBuilder.sendSuccess([PortObject]),
+      },
+    },
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('')
+  public async getAllPorts(@Req() req: Request, @Res() res: Response): Promise<Response> {
+    const ports: PortDocument[] = await this.portsService.findAll();
+
+    return res.status(HttpStatus.OK).json(this.responseBuilderService.sendSuccess(ports));
+  }
+
+  @ApiOperation({
+    summary: 'Should update Port by id',
+    description: 'Update Port',
+  })
+  @ApiCreatedResponse({
+    description: 'Ok',
+    content: {
+      'application/json': {
+        example: SwaggerResponseBuilder.sendSuccess([PortObject]),
+      },
+    },
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Put(':portId')
+  public async updatePort(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Param('portId') portId: string,
+    @Body() updatePortDto: UpdatePortDto,
+  ): Promise<Response> {
+    const { user }: any = req;
+
+    if (user.role !== Role.Admin) throw new ProjectError(1002);
+
+    const port: any = await this.portsService.update(portId, updatePortDto);
+
+    if (port.modifiedCount === 0) throw new ProjectError(1014);
+
+    return res.status(HttpStatus.OK);
+  }
+}
