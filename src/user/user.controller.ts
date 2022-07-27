@@ -11,6 +11,7 @@ import { ProjectError } from '../filters/all-exceptions.filter';
 import { Roles } from '../roles-guard/roles.decorator';
 import { Role } from '../roles-guard/role.enum';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../roles-guard/roles.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -46,7 +47,7 @@ export class UserController {
 
     let user: UserDocument;
 
-    try {
+    try { // TODO: move to exception filter by instanceof
       user = await this.userService.create(newUser);
     } catch (err) {
       if (err.code === 11000) throw new ProjectError(1013);
@@ -77,8 +78,8 @@ export class UserController {
     },
   })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  // @Roles(Role.Admin)
+  @Roles(Role.Admin)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Get(':userId')
   async getUser(@Req() req: Request, @Res() res: Response, @Param('userId') userId: string) {
     const user = await this.userService.findById(userId);

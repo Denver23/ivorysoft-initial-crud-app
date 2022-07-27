@@ -10,6 +10,8 @@ import { ProjectError } from '../filters/all-exceptions.filter';
 import { Request, Response } from 'express';
 import { CreateVesselDto } from './dto/create-vessel.dto';
 import { UpdateVesselDto } from './dto/update-vessel.dto';
+import { RolesGuard } from '../roles-guard/roles.guard';
+import { Roles } from '../roles-guard/roles.decorator';
 
 @ApiTags('Vessels')
 @Controller('vessels')
@@ -124,7 +126,8 @@ export class VesselsController {
     description: 'Ok',
   })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @Roles(Role.Admin)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Put(':vesselId')
   public async updatePort(
     @Req() req: Request,
@@ -132,12 +135,7 @@ export class VesselsController {
     @Param('vesselId') vesselId: string,
     @Body() updateVesselDto: UpdateVesselDto,
   ): Promise<Response> {
-    const { user }: any = req;
-
-    if (user.role !== Role.Admin) throw new ProjectError(1002);
-
     const vessel: any = await this.vesselsService.update(vesselId, updateVesselDto);
-
     if (vessel.modifiedCount === 0) throw new ProjectError(1015);
 
     return res.sendStatus(HttpStatus.OK);

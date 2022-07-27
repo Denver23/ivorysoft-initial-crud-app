@@ -10,6 +10,8 @@ import { ProjectError } from '../filters/all-exceptions.filter';
 import { Role } from '../roles-guard/role.enum';
 import { PortDocument } from './ports.model';
 import { UpdatePortDto } from './dto/update-port.dto';
+import { RolesGuard } from '../roles-guard/roles.guard';
+import { Roles } from '../roles-guard/roles.decorator';
 
 @ApiTags('Ports')
 @Controller('ports')
@@ -48,15 +50,11 @@ export class PortsController {
     description: 'No Content',
   })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @Roles(Role.Admin)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Delete(':portId')
   public async delete(@Req() req: Request, @Res() res: Response, @Param('portId') portId: string): Promise<Response> {
-    const { user }: any = req;
-
-    if (user.role !== Role.Admin) throw new ProjectError(1002);
-
     const port: PortDocument | null = await this.portsService.findById(portId);
-
     if (!port) throw new ProjectError(1014);
 
     await this.portsService.delete(portId);
@@ -76,12 +74,8 @@ export class PortsController {
       },
     },
   })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @Get(':portId')
   public async getPort(@Req() req: Request, @Res() res: Response, @Param('portId') portId: string): Promise<Response> {
-    const { user }: any = req;
-
     const port: PortDocument | null = await this.portsService.findById(portId);
 
     if (!port) throw new ProjectError(1014);
@@ -102,7 +96,6 @@ export class PortsController {
     },
   })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @Get('')
   public async getAllPorts(@Req() req: Request, @Res() res: Response): Promise<Response> {
     const ports: PortDocument[] = await this.portsService.findAll();
