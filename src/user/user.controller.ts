@@ -1,10 +1,30 @@
-import { Body, Controller, Get, HttpStatus, Logger, Param, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { UserService } from './user.service';
 import { UserDocument } from './user.model';
 import { AuthService } from '../auth/auth.service';
-import { ResponseBuilderService, SwaggerResponseBuilder } from '../responseBuilder/responseBuilder.service';
+import {
+  ResponseBuilderService,
+  SwaggerResponseBuilder,
+} from '../responseBuilder/responseBuilder.service';
 import { Request, Response } from 'express';
 import { TokensObject, UserObjectPublic } from '../config/swagger-examples';
 import { ProjectError } from '../filters/all-exceptions.filter';
@@ -28,7 +48,8 @@ export class UserController {
 
   @ApiOperation({
     summary: 'This should register new user',
-    description: 'This is for registration the new user requires name, email, and password',
+    description:
+      'This is for registration the new user requires name, email, and password',
   })
   @ApiCreatedResponse({
     description: 'Created',
@@ -42,19 +63,23 @@ export class UserController {
     },
   })
   @Post('')
-  async registerUser(@Req() req: Request, @Res() res: Response, @Body() newUser: RegisterUserDto): Promise<Response> {
-    this.logger.log(`${req.method} ${req.url} register new user body: ${JSON.stringify(newUser)}`);
+  async registerUser(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() newUser: RegisterUserDto,
+  ): Promise<Response> {
+    this.logger.log(
+      `${req.method} ${req.url} register new user body: ${JSON.stringify(
+        newUser,
+      )}`,
+    );
 
-    let user: UserDocument;
+    const user: UserDocument = await this.userService.create(newUser);
 
-    try { // TODO: move to exception filter by instanceof
-      user = await this.userService.create(newUser);
-    } catch (err) {
-      if (err.code === 11000) throw new ProjectError(1013);
-      throw err;
-    }
-
-    const [token, refreshToken] = [this.authService.getAuthToken(user._id), this.authService.getRefreshToken(user._id)];
+    const [token, refreshToken] = [
+      this.authService.getAuthToken(user._id),
+      this.authService.getRefreshToken(user._id),
+    ];
 
     return res.status(HttpStatus.CREATED).json(
       this.responseBuilderService.sendSuccess({
@@ -81,10 +106,16 @@ export class UserController {
   @Roles(Role.Admin)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get(':userId')
-  async getUser(@Req() req: Request, @Res() res: Response, @Param('userId') userId: string) {
+  async getUser(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Param('userId') userId: string,
+  ) {
     const user = await this.userService.findById(userId);
     if (!user) throw new ProjectError(1008);
 
-    return res.status(HttpStatus.OK).json(this.responseBuilderService.sendSuccess(user.publicFields()));
+    return res
+      .status(HttpStatus.OK)
+      .json(this.responseBuilderService.sendSuccess(user.publicFields()));
   }
 }

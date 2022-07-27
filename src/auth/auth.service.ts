@@ -9,7 +9,10 @@ import { UserService } from '../user/user.service';
 export class AuthService {
   private logger: Logger;
 
-  constructor(private readonly userService: UserService, private readonly jwtService: JwtService) {
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {
     this.logger = new Logger('AuthService');
   }
 
@@ -21,7 +24,11 @@ export class AuthService {
     return user;
   }
 
-  decodeJWT(jwt, key, ignoreExpiration = false): string | { [key: string]: any } {
+  decodeJWT(
+    jwt,
+    key,
+    ignoreExpiration = false,
+  ): string | { [key: string]: any } {
     return this.jwtService.verify(jwt, { secret: key, ignoreExpiration });
   }
 

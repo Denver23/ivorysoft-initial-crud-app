@@ -43,8 +43,14 @@ async function bootstrap() {
 
   await app.listen(configuration.server.port);
 
-  Logger.log(`Server was started on http://${configuration.server.host}:${configuration.server.port}`, 'APP');
-  Logger.log(`Server was started on http://${configuration.server.host}:${configuration.server.port}/api-docs`, 'APP');
+  Logger.log(
+    `Server was started on http://${configuration.server.host}:${configuration.server.port}`,
+    'APP',
+  );
+  Logger.log(
+    `Server was started on http://${configuration.server.host}:${configuration.server.port}/api-docs`,
+    'APP',
+  );
 }
 
 bootstrap();

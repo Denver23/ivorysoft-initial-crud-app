@@ -6,7 +6,10 @@ import { VesselsController } from './vessels.controller';
 import { VesselsService } from './vessels.service';
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Vessel.name, schema: VesselSchema }]), ResponseBuilderModule],
+  imports: [
+    MongooseModule.forFeature([{ name: Vessel.name, schema: VesselSchema }]),
+    ResponseBuilderModule,
+  ],
   controllers: [VesselsController],
   providers: [VesselsService],
 })

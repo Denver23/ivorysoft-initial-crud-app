@@ -1,4 +1,14 @@
-import { Body, Headers, Controller, Get, HttpStatus, Post, Req, Request, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Post,
+  Req,
+  Request,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import {
@@ -11,15 +21,22 @@ import {
 } from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
 import { AuthService } from './auth.service';
-import { ResponseBuilderService, SwaggerResponseBuilder } from '../responseBuilder/responseBuilder.service';
+import {
+  ResponseBuilderService,
+  SwaggerResponseBuilder,
+} from '../responseBuilder/responseBuilder.service';
 import { Response } from 'express';
 import { errorsList } from '../config/errorsList';
 import { UserService } from '../user/user.service';
-import { RefreshTokenBodyDto, RefreshTokenHeadersDto } from '../user/dto/refresh-token.dto';
+import {
+  RefreshTokenBodyDto,
+  RefreshTokenHeadersDto,
+} from '../user/dto/refresh-token.dto';
 import { configuration } from '../config/configuration';
 import { ProjectError } from '../filters/all-exceptions.filter';
 import { UserDocument } from '../user/user.model';
 import { TokensObject, UserObjectPublic } from '../config/swagger-examples';
+import { RequestHeader } from '../utils/request-header.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -48,7 +65,11 @@ export class AuthController {
   })
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  public async login(@Request() req, @Res() res, @Body() loginDto: LoginDto): Promise<any> {
+  public async login(
+    @Request() req,
+    @Res() res,
+    @Body() loginDto: LoginDto,
+  ): Promise<any> {
     const { user } = req;
 
     const token = this.authService.getAuthToken(user.id);
@@ -80,7 +101,10 @@ export class AuthController {
     description: 'Unauthorized',
     content: {
       'application/json': {
-        example: SwaggerResponseBuilder.sendError(errorsList.error1003.message, errorsList.error1003.code),
+        example: SwaggerResponseBuilder.sendError(
+          errorsList.error1003.message,
+          errorsList.error1003.code,
+        ),
       },
     },
   })
@@ -89,13 +113,27 @@ export class AuthController {
   async refreshToken(
     @Req() req: Request,
     @Res() res: Response,
-    @Headers() { authorization }: RefreshTokenHeadersDto,
+    @RequestHeader(RefreshTokenHeadersDto)
+    { authorization }: RefreshTokenHeadersDto,
     @Body() { refreshToken }: RefreshTokenBodyDto,
   ) {
+    console.log(authorization);
     const oldAuthToken = authorization.split(' ')[1];
-    const decoded: any = this.authService.decodeJWT(oldAuthToken, configuration.jwt.jwtSecret, true);
-    const decodedRefresh: any = this.authService.decodeJWT(refreshToken, configuration.jwt.jwtRefreshSecret);
-    if (!decoded._id || !decodedRefresh._id || decoded._id !== decodedRefresh._id) throw new ProjectError(1012);
+    const decoded: any = this.authService.decodeJWT(
+      oldAuthToken,
+      configuration.jwt.jwtSecret,
+      true,
+    );
+    const decodedRefresh: any = this.authService.decodeJWT(
+      refreshToken,
+      configuration.jwt.jwtRefreshSecret,
+    );
+    if (
+      !decoded._id ||
+      !decodedRefresh._id ||
+      decoded._id !== decodedRefresh._id
+    )
+      throw new ProjectError(1012);
     const user: UserDocument = await this.userService.findById(decoded._id);
     if (!user) throw new ProjectError(1012);
     const [token, newRefreshToken] = [
@@ -129,6 +167,8 @@ export class AuthController {
   @Get('me')
   async getMe(@Request() req, @Res() res) {
     const { user } = req;
-    return res.status(HttpStatus.OK).json(this.responseBuilderService.sendSuccess(user.publicFields()));
+    return res
+      .status(HttpStatus.OK)
+      .json(this.responseBuilderService.sendSuccess(user.publicFields()));
   }
 }

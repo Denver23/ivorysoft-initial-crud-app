@@ -5,7 +5,9 @@ import { Vessel, VesselDocument } from './vessels.model';
 
 @Injectable()
 export class VesselsService {
-  constructor(@InjectModel(Vessel.name) private vesselModel: Model<VesselDocument>) {}
+  constructor(
+    @InjectModel(Vessel.name) private vesselModel: Model<VesselDocument>,
+  ) {}
 
   public async create(vesselData: any): Promise<VesselDocument> {
     return this.vesselModel.create(vesselData);

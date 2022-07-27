@@ -66,5 +66,10 @@ export const errorsList: Record<string, IDefaultError> = {
     status: HttpStatus.NOT_FOUND,
     message: 'Vessel Not Found',
     code: 1015,
-  }
+  },
+  error1016: {
+    status: HttpStatus.BAD_REQUEST,
+    message: 'Cast to ObjectId failed',
+    code: 1016,
+  },
 };
