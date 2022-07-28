@@ -1,29 +1,9 @@
 import { VesselDocument } from './vessels.model';
 import { VesselObject } from '../config/swagger-examples';
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpStatus,
-  Param,
-  Post,
-  Put,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Req, Res, UseGuards, } from '@nestjs/common';
 import { VesselsService } from './vessels.service';
-import {
-  ResponseBuilderService,
-  SwaggerResponseBuilder,
-} from '../responseBuilder/responseBuilder.service';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ResponseBuilderService, SwaggerResponseBuilder, } from '../responseBuilder/responseBuilder.service';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOperation, ApiTags, } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Role } from '../roles-guard/role.enum';
 import { ProjectError } from '../filters/all-exceptions.filter';
@@ -54,7 +34,8 @@ export class VesselsController {
     },
   })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @Roles(Role.Admin)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Post()
   public async create(
     @Req() req: Request,

@@ -1,6 +1,4 @@
 import { Prop, SchemaFactory, Schema } from '@nestjs/mongoose';
-import { User } from '../user/user.model';
-import { Types } from 'mongoose';
 
 export type PortDocument = Port & Document;
 

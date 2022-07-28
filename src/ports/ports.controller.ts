@@ -55,7 +55,7 @@ export class PortsController {
   })
   @ApiBearerAuth()
   @Roles(Role.Admin)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Post()
   public async create(
     @Req() req: Request,
